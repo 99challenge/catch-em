@@ -1,21 +1,21 @@
 var main = (function () {
 
     var canvas, ctx;
-    var score;
+    var score = 0;
     var mouseDown = false;
     var currentBars = [];
     var currentBar = [];
     var balls = [];
+    var colours = ['red', 'green', 'blue', 'yellow', 'black'];
+    var currentColour;
 
-    function Ball(x) {
+    function Ball(x, colour) {
         this.x = x;
         this.y = 0;
+        this.colour = colour;
 
         this.draw = function () {
-            ctx.beginPath();
-            ctx.fillStyle = '#456565';
-            ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
-            ctx.fill();
+            circle(this.x, this.y, 5, this.colour);
         };
 
         this.update = function () {
@@ -23,37 +23,48 @@ var main = (function () {
         };
     }
 
-    var drawBar = function () {
-        ctx.beginPath();
-        ctx.moveTo(currentBar[0].x, currentBar[0].y);
 
-        for (var i = 1, l = currentBar.length; i < l; i++) {
-            var point = currentBar[i];
+    var circle = function (x, y, r, colour) {
+        ctx.beginPath();
+        ctx.fillStyle = colour;
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fill();
+    };
+
+    var drawBar = function (bar) {
+        ctx.beginPath();
+        ctx.moveTo(bar[0].x, bar[0].y);
+
+        for (var i = 1, l = bar.length; i < l; i++) {
+            var point = bar[i];
             ctx.lineTo(point.x, point.y);
         }
 
         ctx.lineWidth = 3;
-        ctx.strokeStyle = 'blue';
+        ctx.strokeStyle = '#d3d3d3';
         ctx.stroke();
-        ctx.closePath();
-        ctx.save();
     };
 
     var createBall = function () {
         var rndX = Math.random() * window.innerWidth;
-        balls.push(new Ball(rndX));
+        var colour = colours[Math.floor(Math.random() * colours.length)];
+        balls.push(new Ball(rndX, colour));
     };
 
     var draw = function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var i, l;
 
-        for (var i = 0, l = balls.length; i < l; i++) {
+        for (i = 0, l = balls.length; i < l; i++) {
             balls[i].draw();
         }
 
-        ctx.restore();
+        for (i = 0, l = currentBars.length; i < l; i++) {
+            drawBar(currentBars[i]);
+        }
 
+        circle(canvas.width / 2, canvas.height, 30, currentColour);
     };
 
     var update = function () {
@@ -103,6 +114,7 @@ var main = (function () {
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        currentColour = colours[Math.floor(Math.random() * colours.length)];
 
         window.addEventListener('mousedown', function (e) {
             mouseDown = true;
@@ -115,17 +127,18 @@ var main = (function () {
 
         window.addEventListener('mouseup', function () {
             mouseDown = false;
+            drawBar(currentBar);
             currentBars.push(currentBar);
         });
 
         window.addEventListener('mousemove', function (e) {
+            
+
             if (mouseDown) {
                 currentBar.push({
                     'x': e.clientX,
                     'y': e.clientY
                 });
-
-                drawBar();
             }
         });
 
