@@ -23,7 +23,6 @@ var main = (function () {
         };
     }
 
-
     var circle = function (x, y, r, colour) {
         ctx.beginPath();
         ctx.fillStyle = colour;
@@ -51,6 +50,12 @@ var main = (function () {
         balls.push(new Ball(rndX, colour));
     };
 
+    var updateScore = function () {
+        ctx.font = '48px serif';
+        ctx.fillStyle = '#000';
+        ctx.fillText(score + '', 10, 50);
+    };
+
     var draw = function () {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -64,6 +69,7 @@ var main = (function () {
             drawBar(currentBars[i]);
         }
 
+        updateScore();
         circle(canvas.width / 2, canvas.height, 30, currentColour);
     };
 
@@ -80,6 +86,10 @@ var main = (function () {
             var ball = balls[i];
 
             if (ball.y >= canvas.height) {
+                if (ball.colour === currentColour) {
+                    score -= 2;
+                    updateScore();
+                }
                 balls.splice(i, 1);
             }
 
@@ -87,11 +97,17 @@ var main = (function () {
             for (j = 0; j < currentBars.length; j++) {
 
                 var bar = currentBars[j];
-                var leftX = bar[0].x;
-                var rightX = bar[bar.length - 1].x;
 
-                for (k = 0; k < bar.length; k++) {
-                    if (ball.y >= bar[k].y && ball.x >= leftX && ball.x <= rightX) {
+                for (k = 1; k < bar.length - 1; k++) {
+                    if (ball.y >= bar[k].y && ball.x >= bar[k - 1].x && ball.x <= bar[k + 1].x) {
+                        if (ball.colour === currentColour) {
+                            score += 10;
+                        }
+                        else {
+                            score -= 10;
+                        }
+
+                        updateScore();
                         balls.splice(i, 1);
                         break;
                     }
@@ -128,14 +144,22 @@ var main = (function () {
         window.addEventListener('mouseup', function () {
             mouseDown = false;
             drawBar(currentBar);
+            setTimeout(function () {
+                currentBar.active = false;
+                var i = currentBars.length;
+                while (i--) {
+                    if (!currentBars[i].active) {
+                        currentBars.splice(i, 1);
+                    }
+                }
+            }, 2000);
             currentBars.push(currentBar);
         });
 
         window.addEventListener('mousemove', function (e) {
-            
-
             if (mouseDown) {
                 currentBar.push({
+                    'active': true,
                     'x': e.clientX,
                     'y': e.clientY
                 });
@@ -148,6 +172,13 @@ var main = (function () {
             setTimeout(function() {
                 createBall();
                 ballProduction();
+            }, rand);
+        }());
+        (function changeColour() {
+            var rand = Math.round(Math.random() * (15000 - 5000)) + 5000;
+            setTimeout(function() {
+                currentColour = colours[Math.floor(Math.random() * colours.length)];
+                changeColour();
             }, rand);
         }());
         loop();
